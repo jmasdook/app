@@ -32,7 +32,7 @@ jobs:
       - run: flutter build apk --release --dart-define=SUPABASE_URL=${{ vars.SUPABASE_URL }} --dart-define=SUPABASE_ANON_KEY=${{ vars.SUPABASE_ANON_KEY }}
       - if: always()
         run: rm -f android/key.properties android/app/release.keystore
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: skillconnect-release
           path: |
