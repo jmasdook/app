@@ -43,7 +43,7 @@ begin
   perform private.require_permission('workers.documents.read');
   perform private.require_permission('workers.review');
   if not p_approve and coalesce(length(trim(p_note)), 0) < 3 then perform private.err('reason_required'); end if;
-  update public.worker_documents set status = case when p_approve then 'approved' else 'rejected' end,
+  update public.worker_documents set status = (case when p_approve then 'approved' else 'rejected' end)::public.document_status,
          reviewed_by = auth.uid(), reviewed_at = now(), review_note = p_note
    where id = p_document_id returning * into d;
   if not found then perform private.err('document_not_found'); end if;
@@ -345,20 +345,18 @@ begin
   end loop;
   v := v || jsonb_build_object('auto_completed', n);
 
-  -- Reminders
-  update public.bookings b set reminder_24h_sent_at = now()
-   where status in ('assigned', 'accepted') and reminder_24h_sent_at is null
-     and scheduled_start between now() + interval '1 hour' and now() + interval '24 hours';
-  for r in select id, ref, customer_id, worker_id from public.bookings
-           where reminder_24h_sent_at >= now() - interval '1 minute' and status in ('assigned', 'accepted') loop
+  -- Reminders: the UPDATE ... RETURNING claims each booking exactly once.
+  for r in update public.bookings set reminder_24h_sent_at = now()
+           where status in ('assigned', 'accepted') and reminder_24h_sent_at is null
+             and scheduled_start between now() + interval '1 hour' and now() + interval '24 hours'
+           returning id, ref, customer_id, worker_id loop
     perform private.notify(r.customer_id, 'reminder.24h', jsonb_build_object('ref', r.ref), jsonb_build_object('booking_id', r.id));
     perform private.notify(r.worker_id, 'reminder.24h', jsonb_build_object('ref', r.ref), jsonb_build_object('booking_id', r.id));
   end loop;
-  update public.bookings set reminder_1h_sent_at = now()
-   where status in ('assigned', 'accepted') and reminder_1h_sent_at is null
-     and scheduled_start between now() and now() + interval '1 hour';
-  for r in select id, ref, customer_id, worker_id from public.bookings
-           where reminder_1h_sent_at >= now() - interval '1 minute' and status in ('assigned', 'accepted') loop
+  for r in update public.bookings set reminder_1h_sent_at = now()
+           where status in ('assigned', 'accepted') and reminder_1h_sent_at is null
+             and scheduled_start between now() and now() + interval '1 hour'
+           returning id, ref, customer_id, worker_id loop
     perform private.notify(r.customer_id, 'reminder.1h', jsonb_build_object('ref', r.ref), jsonb_build_object('booking_id', r.id));
     perform private.notify(r.worker_id, 'reminder.1h', jsonb_build_object('ref', r.ref), jsonb_build_object('booking_id', r.id));
   end loop;
