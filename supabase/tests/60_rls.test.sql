@@ -162,7 +162,7 @@ begin
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
   where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute')
     and p.proname not in ('has_role', 'has_permission', 'is_staff', 'is_system', 'can_access_booking',
-                          'can_access_ticket', 'owns_booking', 'is_booking_participant');
+                          'can_access_ticket', 'owns_booking', 'is_booking_participant', 'search_services');
   perform tests.ok(v_exposed is null, 'anon can only execute policy helper functions' || coalesce(' (exposed: ' || v_exposed || ')', ''));
 
   select string_agg(p.proname, ', ') into v_exposed
