@@ -1,0 +1,1 @@
+{ "tasks": { "test": "deno test --allow-env", "check": "deno check --no-lock **/*.ts" }, "lint": { "rules": { "exclude": ["no-explicit-any"] } } }
