@@ -60,7 +60,7 @@ jobs:
       - run: flutter build web --dart-define=SUPABASE_URL=https://example.supabase.co --dart-define=SUPABASE_ANON_KEY=ci-placeholder
       - name: Android debug APK
         run: flutter build apk --debug --dart-define=SUPABASE_URL=${{ vars.SUPABASE_URL || 'https://example.supabase.co' }} --dart-define=SUPABASE_ANON_KEY=${{ vars.SUPABASE_ANON_KEY || 'ci-placeholder' }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: skillconnect-debug-apk, path: mobile/build/app/outputs/flutter-apk/app-debug.apk }
 
   secret-scan:
